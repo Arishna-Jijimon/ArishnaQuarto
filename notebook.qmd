@@ -1,0 +1,197 @@
+---
+title: "Global Child Mortality and Healthcare Access"
+author:  Arishna Jijimon - Student Id - 13404
+format: 
+  html:
+    output-file: index.html 
+    embed-resources: true
+    code-fold: true
+    toc: true
+    css: style.css
+    toc-depth: 2
+project:
+  type: website
+  output-dir: docs
+jupyter: python3
+---
+
+```{python}
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import plotly.express as px
+
+# Define your custom color palette
+custom_palette = [
+    "#e87d2a", "#e87721", "#de6d17", "#cb6415", "#b95b13",
+    "#a65211", "#944910", "#81400e", "#6e370c", "#5c2e0a",
+    "#e88d3a", "#e88731", "#de7d27", "#cb7425", "#b96b23",
+    "#a66221", "#945920", "#81501e", "#6e471c", "#5c3e1a"
+]
+
+# Load datasets
+metadata_df = pd.read_csv('unicef_metadata (1).csv')
+indicator_1_df = pd.read_csv('unicef_indicator_1 (1).csv')
+indicator_2_df = pd.read_csv('unicef_indicator_2 (1).csv')
+
+# Clean datasets
+metadata_clean_df = metadata_df[['country', 'year', 'Life expectancy at birth, total (years)', 
+                                 'GDP per capita (constant 2015 US$)', 'Population, total']].dropna()
+
+indicator_1_clean_df = indicator_1_df[['country', 'time_period', 'indicator', 'obs_value']].dropna()
+indicator_2_clean_df = indicator_2_df[['country', 'time_period', 'indicator', 'obs_value']].dropna()
+
+# Apply custom palette only when needed (optional)
+sns.set_palette(sns.color_palette(custom_palette))
+
+# Set plot settings globally to avoid tight_layout issues
+plt.rcParams.update({'figure.autolayout': True})
+
+```
+
+
+## Introduction
+Child mortality remains one of the biggest challenges around the world, with millions of under-5-year-old children dying from preventable diseases annually. Significant progress, however, was made over the past decades to reduce child mortality rates all over the world. This dashboard gives a comprehensive overview of trends of child mortality worldwide with a particular focus put on gender disparities as well as healthcare access. Through visualization, we believe we can show where progress has been made, disparities persist, and where efforts must be put to reduce childhood mortality even more.
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/, height: 805}
+
+import warnings
+warnings.filterwarnings("ignore")
+# Define your custom color palette
+custom_palette = ["#e87d2a", "#e87721", "#de6d17", "#cb6415", 
+                 "#b95b13", "#a65211", "#944910", "#81400e", 
+                 "#6e370c", "#5c2e0a"]
+
+# Aggregating data for the most recent year
+latest_year = indicator_2_clean_df['time_period'].max()
+latest_data = indicator_2_clean_df[indicator_2_clean_df['time_period'] == latest_year]
+latest_data = latest_data[['country', 'obs_value']].sort_values('obs_value', ascending=False).head(20)
+
+# Create a bar chart with fixed parameters
+plt.figure(figsize=(12, 8))
+ax = sns.barplot(
+    x='obs_value', 
+    y='country', 
+    hue='country',  # Added to satisfy deprecation warning
+    data=latest_data, 
+    palette=custom_palette[:len(latest_data)],  # Use only needed colors
+    dodge=False,  # Prevent automatic dodging with hue
+    legend=False  # Hide legend since countries are on y-axis
+)
+
+# Customize the plot appearance
+plt.title(f"Child Mortality (Ages 1-4) by Country in {latest_year}", 
+         fontsize=14, pad=20, color='#5c2e0a')
+plt.xlabel("Child Deaths per 1,000 (Ages 1-4)", 
+          fontsize=12, labelpad=10, color='#6e370c')
+plt.ylabel("Country", fontsize=12, labelpad=10, color='#6e370c')
+
+# Customize spines and ticks
+ax.spines['bottom'].set_color('#cb6415')
+ax.spines['left'].set_color('#cb6415')
+ax.tick_params(axis='x', colors='#6e370c')
+ax.tick_params(axis='y', colors='#6e370c')
+
+# Add value labels on each bar
+for i, (value, name) in enumerate(zip(latest_data['obs_value'], latest_data['country'])):
+    ax.text(value + 0.5, i, f'{value:.1f}', 
+           va='center', ha='left', 
+           color='#5c2e0a', fontsize=10)
+
+plt.tight_layout()
+plt.show()
+```
+
+## Mortality Patterns Worldwide
+The child mortality rate globally declined significantly from 1990, as a result of advances in healthcare, immunization, and nutrition. The graph presented here plots global trends in child mortality (1 to 4-year-olds) from 1967 to 2023 to illustrate the dramatic declines over the past three decades.
+Child mortality rates have decreased continuously from 1990, with sharp falls having occurred in the 2000s. Deaths remain preventable for millions of people, particularly at low-income countries. Narrowing of the gender gap for rates of child mortality can also be observed, with girls having lower mortality rates than boys all over the world. This was particularly evident since 2005.
+
+
+
+## Regional Analysis: Disparities in Healthcare Access
+While there is a general positive trend, there are still widespread regional disparities regarding access to healthcare and mortality rates. While there are improvements in healthcare facilities in countries such as Burkina Faso, Ghana, and Malawi, resulting in a decline in mortality rates, other countries, particularly from the sub-Saharan Africa continent, continue to have high mortality rates due to a lack of access to healthcare.
+The graph plots the access to health for feverish children in various countries. It can be observed that countries with poor access to health, such as Uganda and Nigeria, have more fatalities. Those countries with a sound health service, such as Kenya and Senegal, have fewer child fatalities. This finding proves the significant role of access to health to the survival of children and hence the need to improve the health systems worldwide.
+
+```{python}
+#| echo: false
+#| fig-height: 6
+#| fig-width: 10
+# Merging the datasets for scatterplot
+merged_data = pd.merge(
+    indicator_2_clean_df[['country', 'time_period', 'obs_value']],
+    metadata_clean_df[['country', 'year', 'GDP per capita (constant 2015 US$)']],
+    left_on=['country', 'time_period'],
+    right_on=['country', 'year'],
+    how='inner'
+).dropna()
+
+plt.figure(figsize=(10, 6))
+sns.regplot(
+    x='GDP per capita (constant 2015 US$)', 
+    y='obs_value', 
+    data=merged_data, 
+    scatter_kws={'s': 20, 'color': '#de6d17'}, 
+    line_kws={'color': '#5c2e0a', 'linewidth': 2}
+)
+plt.title("Child Mortality vs GDP per Capita (Ages 1-4)", color='#5c2e0a')
+plt.xlabel("GDP per Capita (Constant 2015 US$)", color='#6e370c')
+plt.ylabel("Child Mortality (Ages 1-4)", color='#6e370c')
+plt.gca().spines['bottom'].set_color('#cb6415')
+plt.gca().spines['left'].set_color('#cb6415')
+plt.show()
+```
+
+## Gender-Based Mortality Patterns
+Gender disparities in child mortality have been a consistent trend in the majority of the regions. Boys have had a higher mortality compared to girls but the gap narrows with each subsequent year. This section looks at trends of gendered mortality, with the fact that while consistently girls have had lower mortality rates, the gender gap largely reduced significantly from 2005 onwards.
+The pattern is of special interest because it revolves around questioning gender differences in health outcomes, such as access to health care, nutrition, as well as gender discrimination in a number of societies. It is important to comprehend such differences for creating effective interventions for bringing equal access for girls as well as for boys to life-saving health care.
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/, height: 564}
+# Filter and clean data for time-series chart
+time_series_data = indicator_2_clean_df[['country', 'time_period', 'obs_value']].dropna()
+
+# Filter data for a specific country (e.g., Afghanistan)
+country_data = time_series_data[time_series_data['country'] == 'Afghanistan']
+
+# Create time-series plot
+plt.figure(figsize=(10, 6))
+sns.lineplot(x='time_period', y='obs_value', data=country_data, marker='o')
+plt.title(f"Child Mortality (Ages 1-4) Over Time in Afghanistan")
+plt.xlabel("Year")
+plt.ylabel("Child Deaths (Ages 1-4)")
+plt.show()
+```
+
+```{python}
+#| colab: {base_uri: https://localhost:8080/, height: 542}
+import plotly.express as px
+import pandas as pd
+
+# Merge indicator_2_df with metadata_df to have a full dataset with country and value for visualization
+merged_data = pd.merge(indicator_2_df[['country', 'obs_value']], metadata_df[['country', 'year']], on='country', how='inner')
+
+# Filter for the most recent year for each country (you can change this logic based on your needs)
+latest_year = merged_data['year'].max()
+latest_data = merged_data[merged_data['year'] == latest_year]
+
+fig = px.choropleth(latest_data,
+                    locations="country",
+                    locationmode="country names",
+                    color="obs_value",
+                    hover_name="country",
+                    color_continuous_scale=custom_palette,
+                    labels={"obs_value": "Child Mortality Rate (Ages 1-4)"},
+                    title=f"Child Mortality Rate by Country in {latest_year}")
+fig.update_layout(
+    plot_bgcolor='#fff8f2',
+    paper_bgcolor='#fff8f2',
+    font_color='#5c2e0a'
+)
+fig.show()
+```
+
+## Conclusion: The Way Forward
+The information provided in this dashboard provides a holistic representation of trends in child mortality and disparities in access to health facilities. Although there is a decline in the number of fatalities, especially for females, there is still a wide inequality of access to health facilities by countries and regions. To curb these disparities, there is a need for policymakers to place importance on the construction of healthcare facilities, particularly in the high-mortality areas. Moreover, gender disparities of access to health facilities must be placed high in global health policy.
+Specifically, the global community can unite towards providing equal access to healthcare for all children regardless of where they are from or their gender. This will enable us to ensure that all of the world's children have a fair chance of survival and a healthy life.
+

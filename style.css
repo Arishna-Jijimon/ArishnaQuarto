@@ -1,0 +1,70 @@
+/* Custom CSS with warm color scheme */
+:root {
+    --primary-light: #e87d2a;
+    --primary-mid-light: #de6d17;
+    --primary-mid: #cb6415;
+    --primary-mid-dark: #b95b13;
+    --primary-dark: #944910;
+    --primary-very-dark: #5c2e0a;
+    --background-light: #fff8f2;
+    --text-dark: #2a1a0a;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-dark);
+    background-color: var(--background-light);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--primary-very-dark);
+    border-bottom: 2px solid var(--primary-mid-light);
+  }
+  
+  a {
+    color: var(--primary-mid-dark);
+  }
+  
+  a:hover {
+    color: var(--primary-very-dark);
+  }
+  
+  /* Table styling */
+  th {
+    background-color: var(--primary-light);
+    color: white;
+  }
+  
+  td {
+    background-color: var(--background-light);
+  }
+  
+  /* Code blocks */
+  pre {
+    background-color: #f8e9dd;
+    border-left: 4px solid var(--primary-dark);
+  }
+  
+  /* Plot containers */
+  .plot-container {
+    background-color: white;
+    border: 1px solid var(--primary-mid-light);
+    box-shadow: 0 2px 4px rgba(232, 125, 42, 0.1);
+  }
+  
+  /* Header */
+  .quarto-title-banner {
+    background: linear-gradient(to right, var(--primary-very-dark), var(--primary-dark));
+    color: white;
+  }
+  
+  /* Buttons */
+  button, .btn {
+    background-color: var(--primary-mid);
+    color: white;
+  }
+  
+  button:hover, .btn:hover {
+    background-color: var(--primary-dark);
+  }
